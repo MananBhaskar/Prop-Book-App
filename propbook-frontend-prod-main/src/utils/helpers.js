@@ -56,7 +56,17 @@ export function splitPropertyMedia(media) {
 }
 
 /**
- * Builds the text payload used by native share and WhatsApp share.
+ * Builds a stable public link to a property details page.
+ * @param {Object} property
+ * @returns {string}
+ */
+export function buildPropertyPublicUrl(property) {
+    const origin = window.location.origin;
+    return `${origin}/#/property/${encodeURIComponent(property.id)}`;
+}
+
+/**
+ * Builds the text payload used by WhatsApp share.
  * @param {Object} property
  * @returns {string}
  */
@@ -72,6 +82,9 @@ export function buildPropertyShareText(property) {
         .filter((item) => item.kind === "pdf")
         .map((item) => item.url);
 
+    const primaryImageUrl = imageUrls[0] || "";
+    const publicUrl = buildPropertyPublicUrl(p);
+
     const details = p.type === "Showroom"
         ? [
             p.size && `Plot Size: ${p.size}`,
@@ -85,6 +98,8 @@ export function buildPropertyShareText(property) {
         ].filter(Boolean).join("\n");
 
     return [
+        primaryImageUrl,
+        "",
         `${typeIcon} ${p.type} for Sale`,
         "",
         `${p.title}`,
@@ -94,12 +109,9 @@ export function buildPropertyShareText(property) {
         details,
         p.notes && `Notes: ${p.notes}`,
         p.contact && `Contact: ${p.contact}`,
-        imageUrls.length ? "" : "",
-        imageUrls.length ? "Images:" : "",
-        ...imageUrls,
-        pdfUrls.length ? "" : "",
-        pdfUrls.length ? "Documents:" : "",
-        ...pdfUrls,
+        "",
+        `View photos: ${publicUrl}`,
+        pdfUrls.length ? `Documents: ${pdfUrls.length} PDF file${pdfUrls.length > 1 ? "s" : ""} available` : "",
         "",
         "Shared via PropBook",
     ].filter((line) => line !== false && line !== undefined && line !== "").join("\n");

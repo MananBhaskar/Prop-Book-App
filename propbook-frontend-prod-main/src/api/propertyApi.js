@@ -7,6 +7,7 @@
 import {
     collection,
     doc,
+    getDoc,
     getDocs,
     addDoc,
     updateDoc,
@@ -31,6 +32,19 @@ export async function fetchProperties() {
     const q = query(propertiesCol, orderBy("createdAt", "desc"));
     const snap = await getDocs(q);
     return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * Fetch a single property by id.
+ * @param {string} id
+ * @returns {Promise<Object|null>}
+ */
+export async function fetchPropertyById(id) {
+    const snap = await getDoc(doc(db, "properties", id));
+    if (!snap.exists()) {
+        return null;
+    }
+    return { id: snap.id, ...snap.data() };
 }
 
 /**

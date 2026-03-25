@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import useProperties from "../hooks/useProperties";
-import { buildPropertyShareText, buildWhatsAppUrl, normalizePropertyMedia } from "../utils/helpers";
+import { buildWhatsAppUrl } from "../utils/helpers";
 import { logoutUser, onAuthChange } from "../api/auth";
 import Toast from "../components/Toast";
 import LoginScreen from "../components/LoginScreen";
@@ -36,52 +36,13 @@ export default function PropBookPage() {
         form, setForm, editId, showForm, viewProp, setViewProp,
         loadData, handleSave, handleDelete, handleStatusChange,
         handleImageUpload, clearImage,
-        openEdit, openAddForm, closeForm, logActivity, showToast,
+        openEdit, openAddForm, closeForm, logActivity,
     } = useProperties(user);
 
     const shareOnWhatsApp = (p) => {
         const url = buildWhatsAppUrl(p);
         window.open(url, "_blank");
         logActivity(`Shared "${p.title}" on WhatsApp`);
-    };
-
-    const shareProperty = async (p) => {
-        const shareText = buildPropertyShareText(p);
-        const primaryImage = normalizePropertyMedia(p).find((item) => item.kind === "image");
-
-        if (!navigator.share || !primaryImage) {
-            shareOnWhatsApp(p);
-            return;
-        }
-
-        try {
-            const response = await fetch(primaryImage.url, { mode: "cors" });
-            if (!response.ok) {
-                throw new Error("Could not load the property image for sharing.");
-            }
-
-            const blob = await response.blob();
-            const extension = blob.type.split("/")[1] || "jpg";
-            const file = new File([blob], `property-${p.id || "share"}.${extension}`, {
-                type: blob.type || "image/jpeg",
-            });
-            const shareData = {
-                title: p.title,
-                text: shareText,
-                files: [file],
-            };
-
-            if (typeof navigator.canShare === "function" && navigator.canShare(shareData)) {
-                await navigator.share(shareData);
-                logActivity(`Shared "${p.title}" with image`);
-                return;
-            }
-        } catch (err) {
-            console.error("Native share failed, falling back to WhatsApp:", err);
-            showToast("Native image sharing is not available here. Using WhatsApp share instead.", "error");
-        }
-
-        shareOnWhatsApp(p);
     };
 
     const handleFormChange = (key, value) => {
@@ -150,7 +111,7 @@ export default function PropBookPage() {
                                         onEdit={openEdit}
                                         onDelete={handleDelete}
                                         onStatusChange={handleStatusChange}
-                                        onShare={shareProperty}
+                                        onShare={shareOnWhatsApp}
                                     />
                                 ))}
                             </div>
@@ -179,7 +140,7 @@ export default function PropBookPage() {
                     property={viewProp}
                     onClose={() => setViewProp(null)}
                     onEdit={openEdit}
-                    onShare={shareProperty}
+                    onShare={shareOnWhatsApp}
                     onDelete={handleDelete}
                 />
             )}
