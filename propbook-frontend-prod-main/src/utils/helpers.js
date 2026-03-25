@@ -64,7 +64,13 @@ export function buildWhatsAppUrl(property) {
     const p = property;
     const typeIcon = { Kothi: "House", Flat: "Building", Plot: "Plot", Showroom: "Shop" }[p.type] || "House";
     const statusIcon = { Available: "Available", Sold: "Sold", "On Hold": "On Hold" }[p.status] || "Available";
-    const pdfCount = normalizePropertyMedia(p).filter((item) => item.kind === "pdf").length;
+    const media = normalizePropertyMedia(p);
+    const imageUrls = media
+        .filter((item) => item.kind === "image")
+        .map((item) => item.url);
+    const pdfUrls = media
+        .filter((item) => item.kind === "pdf")
+        .map((item) => item.url);
 
     const details = p.type === "Showroom"
         ? [
@@ -88,7 +94,12 @@ export function buildWhatsAppUrl(property) {
         details,
         p.notes && `Notes: ${p.notes}`,
         p.contact && `Contact: ${p.contact}`,
-        pdfCount ? `Documents: ${pdfCount} PDF file${pdfCount > 1 ? "s" : ""} available` : "",
+        imageUrls.length ? "" : "",
+        imageUrls.length ? "Images:" : "",
+        ...imageUrls,
+        pdfUrls.length ? "" : "",
+        pdfUrls.length ? "Documents:" : "",
+        ...pdfUrls,
         "",
         "Shared via PropBook",
     ].filter((line) => line !== false && line !== undefined && line !== "").join("\n");
