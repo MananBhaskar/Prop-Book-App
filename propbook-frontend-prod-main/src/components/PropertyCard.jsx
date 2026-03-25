@@ -1,9 +1,8 @@
+import { useState } from "react";
 import { TYPE_COLORS, STATUS_CFG } from "../utils/constants";
+import { normalizePropertyMedia, splitPropertyMedia } from "../utils/helpers";
 import WhatsAppIcon from "./WhatsAppIcon";
 
-/**
- * Single property card with type badge, price, quick status toggle, and action buttons.
- */
 export default function PropertyCard({
     property: p,
     onView,
@@ -14,6 +13,10 @@ export default function PropertyCard({
 }) {
     const tc = TYPE_COLORS[p.type] || TYPE_COLORS.Flat;
     const sc = STATUS_CFG[p.status] || STATUS_CFG.Available;
+    const media = normalizePropertyMedia(p);
+    const { images, pdfs } = splitPropertyMedia(media);
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
+    const activeImage = images[activeImageIndex] || images[0];
 
     return (
         <div
@@ -31,14 +34,40 @@ export default function PropertyCard({
                 e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)";
             }}
         >
-            {p.imageUrl && (
-                <img
-                    src={p.imageUrl}
-                    alt={p.title}
-                    style={{ width: "100%", height: 190, objectFit: "cover", display: "block" }}
-                />
+            {activeImage && (
+                <div style={{ position: "relative" }}>
+                    <img
+                        src={activeImage.url}
+                        alt={p.title}
+                        style={{ width: "100%", height: 190, objectFit: "cover", display: "block" }}
+                    />
+                    {images.length > 1 && (
+                        <>
+                            <button
+                                onClick={() => setActiveImageIndex((prev) => (prev - 1 + images.length) % images.length)}
+                                style={{
+                                    position: "absolute", top: "50%", left: 10, transform: "translateY(-50%)",
+                                    border: "none", width: 30, height: 30, borderRadius: "50%",
+                                    background: "rgba(15, 23, 42, 0.65)", color: "#fff", cursor: "pointer",
+                                }}
+                            >
+                                {"<"}
+                            </button>
+                            <button
+                                onClick={() => setActiveImageIndex((prev) => (prev + 1) % images.length)}
+                                style={{
+                                    position: "absolute", top: "50%", right: 10, transform: "translateY(-50%)",
+                                    border: "none", width: 30, height: 30, borderRadius: "50%",
+                                    background: "rgba(15, 23, 42, 0.65)", color: "#fff", cursor: "pointer",
+                                }}
+                            >
+                                {">"}
+                            </button>
+                        </>
+                    )}
+                </div>
             )}
-            {/* Card header */}
+
             <div style={{
                 background: `linear-gradient(135deg,${tc.bg},#fff)`,
                 padding: "14px 16px 10px", borderBottom: "1px solid #f1f5f9",
@@ -60,16 +89,13 @@ export default function PropertyCard({
                 <div style={{ fontSize: 15, fontWeight: 800, marginTop: 9, color: "#1a1a2e", lineHeight: 1.3 }}>
                     {p.title}
                 </div>
-                <div style={{ fontSize: 13, color: "#64748b", marginTop: 3 }}>📍 {p.area}</div>
+                <div style={{ fontSize: 13, color: "#64748b", marginTop: 3 }}>Location: {p.area}</div>
             </div>
 
-            {/* Card body */}
             <div style={{ padding: "11px 16px" }}>
-                {/* Price + size */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                     <span style={{ fontSize: 20, fontWeight: 900, color: "#0f3460" }}>
-                        ₹{p.price}{" "}
-                        <span style={{ fontSize: 13, fontWeight: 600, color: "#64748b" }}>{p.priceUnit}</span>
+                        Rs{p.price} <span style={{ fontSize: 13, fontWeight: 600, color: "#64748b" }}>{p.priceUnit}</span>
                     </span>
                     <span style={{
                         fontSize: 13, color: "#64748b", background: "#f8fafc",
@@ -79,22 +105,28 @@ export default function PropertyCard({
                     </span>
                 </div>
 
-                {/* Details row */}
-                <div style={{ display: "flex", gap: 12, fontSize: 12, color: "#64748b", marginBottom: 8 }}>
+                <div style={{ display: "flex", gap: 12, fontSize: 12, color: "#64748b", marginBottom: 8, flexWrap: "wrap" }}>
                     {p.type === "Showroom" ? (
                         <>
-                            {p.floorArea && <span>📐 {p.floorArea}</span>}
-                            {p.facing && <span>🧭 {p.facing}</span>}
-                            {p.contact && <span>📞 {p.contact}</span>}
+                            {p.floorArea && <span>Area: {p.floorArea}</span>}
+                            {p.facing && <span>Facing: {p.facing}</span>}
+                            {p.contact && <span>Phone: {p.contact}</span>}
                         </>
                     ) : (
                         <>
-                            {p.bedrooms && p.bedrooms !== "-" && <span>🛏 {p.bedrooms} Bed</span>}
-                            {p.bathrooms && p.bathrooms !== "-" && <span>🚿 {p.bathrooms} Bath</span>}
-                            {p.contact && <span>📞 {p.contact}</span>}
+                            {p.bedrooms && p.bedrooms !== "-" && <span>{p.bedrooms} Bed</span>}
+                            {p.bathrooms && p.bathrooms !== "-" && <span>{p.bathrooms} Bath</span>}
+                            {p.contact && <span>Phone: {p.contact}</span>}
                         </>
                     )}
                 </div>
+
+                {(images.length > 1 || pdfs.length > 0) && (
+                    <div style={{ fontSize: 11, color: "#64748b", marginBottom: 8 }}>
+                        {images.length > 0 ? `${images.length} image${images.length > 1 ? "s" : ""}` : "0 images"}
+                        {pdfs.length > 0 ? ` • ${pdfs.length} PDF${pdfs.length > 1 ? "s" : ""}` : ""}
+                    </div>
+                )}
 
                 {p.addedBy && (
                     <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 7 }}>
@@ -102,7 +134,6 @@ export default function PropertyCard({
                     </div>
                 )}
 
-                {/* Quick status toggle */}
                 <div style={{ display: "flex", gap: 5, marginBottom: 9 }}>
                     {["Available", "On Hold", "Sold"].map((s) => (
                         <button key={s} onClick={() => onStatusChange(p, s)} style={{
@@ -118,7 +149,6 @@ export default function PropertyCard({
                     ))}
                 </div>
 
-                {/* Action buttons */}
                 <div style={{ display: "flex", gap: 7 }}>
                     <button onClick={() => onView(p)} style={{
                         flex: 1, padding: "8px", background: "#0f3460", color: "#fff",
@@ -140,7 +170,7 @@ export default function PropertyCard({
                     <button onClick={() => onDelete(p)} style={{
                         padding: "8px 11px", background: "#fff0f0", color: "#dc2626",
                         border: "none", borderRadius: 8, fontWeight: 700, cursor: "pointer",
-                    }}>🗑</button>
+                    }}>Del</button>
                 </div>
             </div>
         </div>

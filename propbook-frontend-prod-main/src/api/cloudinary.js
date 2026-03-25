@@ -9,18 +9,25 @@ function getUploadUrl() {
         );
     }
 
-    return `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+    return `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
 }
 
 /**
- * Upload a single image to Cloudinary using an unsigned upload preset.
+ * Upload a single image or PDF to Cloudinary using an unsigned upload preset.
  *
  * @param {File} file
- * @returns {Promise<string>}
+ * @returns {Promise<{url: string, kind: "image" | "pdf", name: string}>}
  */
 export async function uploadImageToCloudinary(file) {
     if (!(file instanceof File)) {
-        throw new Error("Please select a valid image file.");
+        throw new Error("Please select a valid file.");
+    }
+
+    const isImage = file.type.startsWith("image/");
+    const isPdf = file.type === "application/pdf";
+
+    if (!isImage && !isPdf) {
+        throw new Error("Only image and PDF files are allowed.");
     }
 
     const formData = new FormData();
@@ -41,5 +48,9 @@ export async function uploadImageToCloudinary(file) {
         throw new Error(data?.error?.message || "Cloudinary upload failed.");
     }
 
-    return data.secure_url;
+    return {
+        url: data.secure_url,
+        kind: isPdf ? "pdf" : "image",
+        name: file.name,
+    };
 }

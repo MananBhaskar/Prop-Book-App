@@ -23,6 +23,7 @@ export const STATUS_LIST = ["Available", "On Hold", "Sold"];
 
 // ─── Price Units ───────────────────────────────────────────────────────────────
 export const PRICE_UNITS = ["Lakh", "Cr"];
+export const MAX_MEDIA_FILES = 20;
 
 // ─── Blank Form Template ───────────────────────────────────────────────────────
 export const BLANK_FORM = {
@@ -40,6 +41,7 @@ export const BLANK_FORM = {
     contact: "",
     notes: "",
     imageUrl: "",
+    mediaFiles: [],
 };
 
 // ─── Activity Log Limit ────────────────────────────────────────────────────────

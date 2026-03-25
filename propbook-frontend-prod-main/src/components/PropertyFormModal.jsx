@@ -1,6 +1,5 @@
-import { PROPERTY_TYPES, PRICE_UNITS, STATUS_LIST } from "../utils/constants";
+import { MAX_MEDIA_FILES, PROPERTY_TYPES, PRICE_UNITS, STATUS_LIST } from "../utils/constants";
 
-// ─── Shared field styles ───────────────────────────────────────────────────────
 const fieldInputStyle = {
     width: "100%", padding: "10px 14px", borderRadius: 9,
     border: "1.5px solid #d1d5db", fontSize: 14,
@@ -15,9 +14,6 @@ const fieldSelectStyle = {
     appearance: "auto",
 };
 
-/**
- * Add / Edit property modal with dynamic fields based on property type.
- */
 export default function PropertyFormModal({
     form,
     editId,
@@ -75,38 +71,33 @@ export default function PropertyFormModal({
                 maxHeight: "90vh", overflowY: "auto",
                 boxShadow: "0 24px 70px rgba(0,0,0,0.3)",
             }}>
-                {/* Modal header */}
                 <div style={{
                     background: "linear-gradient(135deg, #0f172a, #1e3a5f)", padding: "18px 22px",
                     borderRadius: "18px 18px 0 0", display: "flex",
                     justifyContent: "space-between", alignItems: "center",
                 }}>
                     <span style={{ color: "#fff", fontWeight: 800, fontSize: 17 }}>
-                        {editId ? "✏️ Edit Property" : "➕ Add New Property"}
+                        {editId ? "Edit Property" : "Add New Property"}
                     </span>
                     <button onClick={onClose} style={{
                         background: "rgba(255,255,255,0.15)", border: "none", color: "#fff",
                         borderRadius: 8, padding: "4px 12px", cursor: "pointer", fontSize: 17,
-                    }}>✕</button>
+                    }}>x</button>
                 </div>
 
-                {/* Modal body */}
                 <div style={{ padding: "20px 22px" }}>
-                    {/* Showroom banner */}
                     {isShowroom && (
                         <div style={{
                             background: "#faf5ff", border: "1.5px solid #d8b4fe",
                             borderRadius: 10, padding: "10px 14px", marginBottom: 16,
                             display: "flex", alignItems: "center", gap: 8,
                         }}>
-                            <span style={{ fontSize: 20 }}>🏪</span>
                             <span style={{ fontSize: 13, fontWeight: 700, color: "#7c3aed" }}>
-                                Commercial Showroom — filling relevant fields
+                                Commercial showroom fields enabled
                             </span>
                         </div>
                     )}
 
-                    {/* Dynamic fields */}
                     {fields.map((f) => (
                         <div key={f.k} style={{ marginBottom: 14 }}>
                             <label style={{
@@ -140,47 +131,91 @@ export default function PropertyFormModal({
                             fontSize: 13, fontWeight: 600, color: "#374151",
                             display: "block", marginBottom: 5,
                         }}>
-                            Property Image
+                            Property Files
                         </label>
                         <input
                             type="file"
-                            accept="image/*"
-                            onChange={(e) => onImageUpload(e.target.files?.[0])}
+                            accept="image/*,application/pdf"
+                            multiple
+                            onChange={(e) => {
+                                onImageUpload(Array.from(e.target.files || []));
+                                e.target.value = "";
+                            }}
                             style={fieldInputStyle}
                         />
                         <div style={{ fontSize: 12, color: "#64748b", marginTop: 6 }}>
-                            Uploads to Cloudinary instead of Firebase Storage.
+                            Upload up to {MAX_MEDIA_FILES} images or PDFs.
                         </div>
                         {uploadingImage && (
                             <div style={{ fontSize: 12, color: "#0f3460", marginTop: 6 }}>
-                                Uploading image...
+                                Uploading files...
                             </div>
                         )}
-                        {form.imageUrl && (
+                        {form.mediaFiles?.length > 0 && (
                             <div style={{ marginTop: 10 }}>
-                                <img
-                                    src={form.imageUrl}
-                                    alt="Property preview"
-                                    style={{
-                                        width: "100%", height: 180, objectFit: "cover",
-                                        borderRadius: 12, border: "1px solid #e5e7eb",
-                                    }}
-                                />
-                                <button
-                                    onClick={onClearImage}
-                                    style={{
-                                        marginTop: 8, background: "#fff0f0", color: "#dc2626",
-                                        border: "none", borderRadius: 8, padding: "8px 12px",
-                                        fontWeight: 700, cursor: "pointer",
-                                    }}
-                                >
-                                    Remove Image
-                                </button>
+                                <div style={{
+                                    fontSize: 12, fontWeight: 700, color: "#334155", marginBottom: 8,
+                                }}>
+                                    {form.mediaFiles.length} / {MAX_MEDIA_FILES} uploaded
+                                </div>
+                                <div style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))",
+                                    gap: 10,
+                                }}>
+                                    {form.mediaFiles.map((item, index) => (
+                                        <div key={`${item.url}-${index}`} style={{
+                                            border: "1px solid #e5e7eb",
+                                            borderRadius: 12,
+                                            overflow: "hidden",
+                                            background: "#fff",
+                                        }}>
+                                            {item.kind === "image" ? (
+                                                <img
+                                                    src={item.url}
+                                                    alt={item.name || `Property media ${index + 1}`}
+                                                    style={{
+                                                        width: "100%", height: 90, objectFit: "cover", display: "block",
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div style={{
+                                                    height: 90,
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    background: "#eff6ff",
+                                                    color: "#1d4ed8",
+                                                    fontWeight: 800,
+                                                    fontSize: 14,
+                                                }}>
+                                                    PDF
+                                                </div>
+                                            )}
+                                            <div style={{ padding: 8 }}>
+                                                <div style={{
+                                                    fontSize: 11, color: "#475569", minHeight: 30, wordBreak: "break-word",
+                                                }}>
+                                                    {item.name || (item.kind === "pdf" ? "PDF document" : "Image")}
+                                                </div>
+                                                <button
+                                                    onClick={() => onClearImage(index)}
+                                                    style={{
+                                                        marginTop: 6, width: "100%", background: "#fff0f0", color: "#dc2626",
+                                                        border: "none", borderRadius: 8, padding: "7px 10px",
+                                                        fontWeight: 700, cursor: "pointer", fontSize: 12,
+                                                    }}
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>
 
-                    {/* Action buttons */}
                     <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
                         <button onClick={onSave} disabled={uploadingImage} style={{
                             flex: 1, padding: "12px",
