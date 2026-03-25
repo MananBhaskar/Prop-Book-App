@@ -82,7 +82,6 @@ export function buildPropertyShareText(property) {
         .filter((item) => item.kind === "pdf")
         .map((item) => item.url);
 
-    const primaryImageUrl = imageUrls[0] || "";
     const publicUrl = buildPropertyPublicUrl(p);
 
     const details = p.type === "Showroom"
@@ -98,8 +97,6 @@ export function buildPropertyShareText(property) {
         ].filter(Boolean).join("\n");
 
     return [
-        primaryImageUrl,
-        "",
         `${typeIcon} ${p.type} for Sale`,
         "",
         `${p.title}`,
