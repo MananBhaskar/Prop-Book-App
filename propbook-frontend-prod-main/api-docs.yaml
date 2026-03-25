@@ -1,0 +1,352 @@
+openapi: 3.1.0
+info:
+  title: REIM — Real Estate Investment Management API
+  description: "REST API for managing real estate properties, activity logs, and users.\
+    \ Secured with HTTP Basic authentication. Admin-only endpoints are under /api/admin/."
+  contact:
+    name: Tarun
+  version: 1.0.0
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+security:
+- basicAuth: []
+tags:
+- name: Properties
+  description: Manage real estate properties
+- name: User Management (Admin)
+  description: Admin-only endpoints for managing users
+- name: Activity Logs
+  description: Track user activity logs
+paths:
+  /api/properties/{id}:
+    put:
+      tags:
+      - Properties
+      summary: Update a property
+      description: Update an existing property by its ID
+      operationId: update
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Property"
+        required: true
+      responses:
+        "200":
+          description: Property updated successfully
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Property"
+        "404":
+          description: Property not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Property"
+        "400":
+          description: Validation failed
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Property"
+    delete:
+      tags:
+      - Properties
+      summary: Delete a property
+      description: Delete a property by its ID
+      operationId: delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Property deleted successfully
+        "404":
+          description: Property not found
+  /api/admin/users/{id}:
+    get:
+      tags:
+      - User Management (Admin)
+      summary: Get user by ID
+      operationId: getUserById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: User found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "404":
+          description: User not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+    put:
+      tags:
+      - User Management (Admin)
+      summary: Update a user
+      description: Update username and/or password. Only non-null fields are updated.
+      operationId: updateUser
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+        required: true
+      responses:
+        "200":
+          description: User updated successfully
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "404":
+          description: User not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "409":
+          description: Username already taken
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+    delete:
+      tags:
+      - User Management (Admin)
+      summary: Delete a user
+      description: Delete a user by ID. The admin user cannot be deleted.
+      operationId: deleteUser
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: User deleted successfully
+        "404":
+          description: User not found
+        "409":
+          description: Cannot delete admin user
+  /api/properties:
+    get:
+      tags:
+      - Properties
+      summary: Get all properties
+      description: Returns a list of all real estate properties
+      operationId: getAll
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Property"
+    post:
+      tags:
+      - Properties
+      summary: Create a property
+      description: Add a new real estate property
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Property"
+        required: true
+      responses:
+        "201":
+          description: Property created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Property"
+        "400":
+          description: Validation failed
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Property"
+  /api/admin/users:
+    get:
+      tags:
+      - User Management (Admin)
+      summary: List all users
+      description: Returns all registered users (passwords are never exposed)
+      operationId: getAllUsers
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserResponse"
+    post:
+      tags:
+      - User Management (Admin)
+      summary: Create a new user
+      description: Creates a user with role USER. Username must be unique.
+      operationId: createUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+        required: true
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          description: Validation failed
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "409":
+          description: Username already taken
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+  /api/activity:
+    get:
+      tags:
+      - Activity Logs
+      summary: Get all activity logs
+      description: Returns a list of all activity log entries
+      operationId: getAll_1
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityLogModel"
+    post:
+      tags:
+      - Activity Logs
+      summary: Create an activity log
+      description: Record a new activity log entry
+      operationId: log
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityLogModel"
+        required: true
+      responses:
+        "201":
+          description: Activity log created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ActivityLogModel"
+        "400":
+          description: Validation failed
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ActivityLogModel"
+components:
+  schemas:
+    Property:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          minLength: 1
+        location:
+          type: string
+          minLength: 1
+        price:
+          type: number
+          format: double
+    UpdateUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          maxLength: 30
+          minLength: 3
+        password:
+          type: string
+          maxLength: 2147483647
+          minLength: 6
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        role:
+          type: string
+    CreateUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          maxLength: 30
+          minLength: 3
+        password:
+          type: string
+          maxLength: 2147483647
+          minLength: 6
+    ActivityLogModel:
+      type: object
+      properties:
+        id:
+          type: string
+        user:
+          type: string
+          minLength: 1
+        msg:
+          type: string
+          minLength: 1
+        time:
+          type: string
+          minLength: 1
+  securitySchemes:
+    basicAuth:
+      type: http
+      name: basicAuth
+      scheme: basic
