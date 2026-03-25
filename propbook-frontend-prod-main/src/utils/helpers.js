@@ -111,7 +111,7 @@ export function buildPropertyShareText(property) {
         publicUrl,
         pdfUrls.length ? `Documents: ${pdfUrls.length} PDF file${pdfUrls.length > 1 ? "s" : ""} available` : "",
         "",
-        "Shared via PropBook",
+        "Shared via Saheb Buildtech",
     ].filter((line) => line !== false && line !== undefined && line !== "").join("\n");
 }
 
