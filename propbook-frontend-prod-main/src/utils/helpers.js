@@ -56,11 +56,11 @@ export function splitPropertyMedia(media) {
 }
 
 /**
- * Builds a WhatsApp share URL for a property listing.
+ * Builds the text payload used by native share and WhatsApp share.
  * @param {Object} property
  * @returns {string}
  */
-export function buildWhatsAppUrl(property) {
+export function buildPropertyShareText(property) {
     const p = property;
     const typeIcon = { Kothi: "House", Flat: "Building", Plot: "Plot", Showroom: "Shop" }[p.type] || "House";
     const statusIcon = { Available: "Available", Sold: "Sold", "On Hold": "On Hold" }[p.status] || "Available";
@@ -84,7 +84,7 @@ export function buildWhatsAppUrl(property) {
             p.bathrooms && p.bathrooms !== "-" && `Bathrooms: ${p.bathrooms}`,
         ].filter(Boolean).join("\n");
 
-    const msg = [
+    return [
         `${typeIcon} ${p.type} for Sale`,
         "",
         `${p.title}`,
@@ -103,6 +103,13 @@ export function buildWhatsAppUrl(property) {
         "",
         "Shared via PropBook",
     ].filter((line) => line !== false && line !== undefined && line !== "").join("\n");
+}
 
-    return `https://wa.me/?text=${encodeURIComponent(msg)}`;
+/**
+ * Builds a WhatsApp share URL for a property listing.
+ * @param {Object} property
+ * @returns {string}
+ */
+export function buildWhatsAppUrl(property) {
+    return `https://wa.me/?text=${encodeURIComponent(buildPropertyShareText(property))}`;
 }
